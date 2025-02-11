@@ -199,6 +199,7 @@ ansible [core 2.15.13]
 
 Faites le nécessaire pour réussir un ping Ansible comme ceci :
 
+```bash
 $ ansible all -i target01,target02,target03 -m ping
 target03 | SUCCESS => {
     "ansible_facts": {
@@ -221,7 +222,7 @@ target01 | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
-
+```
 
 ```bash
 sudo nano /etc/hosts
