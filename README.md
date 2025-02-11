@@ -1,6 +1,7 @@
 # formation-ansible-ema
 
-## Exercice 1
+## Atelier 1
+### Exercice 1
 
 Démarrez la VM ubuntu depuis le répertoire atelier-01.
 
@@ -60,7 +61,7 @@ Déconnectez-vous et supprimez la VM.
 [ema@localhost:atelier-01] $ vagrant destroy -f
 ```
 
-## Exercice 2
+### Exercice 2
 
 Répétez l’exercice précédent en configurant un dépôt PPA (Personal Package Archive) pour Ansible :
 
@@ -134,7 +135,7 @@ Déconnectez-vous et supprimez la VM.
 [ema@localhost:atelier-01] $ vagrant destroy -f
 ```
 
-## Exercice 3
+### Exercice 3
 
 Lancez une VM Rocky Linux et installez Ansible en utilisant PIP et Virtualenv.
 
@@ -194,3 +195,87 @@ ansible [core 2.15.13]
   libyaml = True
 ```
 
+### Atelier 3 - Exercice
+
+Faites le nécessaire pour réussir un ping Ansible comme ceci :
+
+$ ansible all -i target01,target02,target03 -m ping
+target03 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+target02 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+target01 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+
+
+```bash
+sudo nano /etc/hosts
+```
+
+Ajoutez les lignes suivantes :
+
+```bash
+  GNU nano 6.2                                     /etc/hosts *                                            
+127.0.0.1 localhost
+127.0.1.1 vagrant
+
+127.0.0.1      localhost.localdomain  localhost
+192.168.56.10  control.sandbox.lan    control
+192.168.56.20  target01.sandbox.lan      target01
+192.168.56.30  target02.sandbox.lan     target02
+192.168.56.40  target03.sandbox.lan       target03
+```
+
+```bash
+ssh-keyscan -t rsa target01 target02 target03 >> .ssh/known_hosts
+```
+
+```bash
+ssh-keygen
+```
+
+```bash
+vagrant@control:~$ ssh-copy-id vagrant@target01
+vagrant@control:~$ ssh-copy-id vagrant@target02
+vagrant@control:~$ ssh-copy-id vagrant@target03
+```
+
+```bash
+vagrant@control:~$ ansible all -i target01,target02,target03 -m ping
+target03 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+target01 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+target02 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
