@@ -223,6 +223,7 @@ target01 | SUCCESS => {
     "ping": "pong"
 }
 ```
+Modifiez le fichier /etc/hosts pour ajouter les noms de domaine des machines cibles.
 
 ```bash
 sudo nano /etc/hosts
@@ -231,7 +232,6 @@ sudo nano /etc/hosts
 Ajoutez les lignes suivantes :
 
 ```bash
-  GNU nano 6.2                                     /etc/hosts *                                            
 127.0.0.1 localhost
 127.0.1.1 vagrant
 
@@ -241,6 +241,8 @@ Ajoutez les lignes suivantes :
 192.168.56.30  target02.sandbox.lan     target02
 192.168.56.40  target03.sandbox.lan       target03
 ```
+
+Ajoutez les clés SSH des machines cibles.
 
 ```bash
 ssh-keyscan -t rsa target01 target02 target03 >> .ssh/known_hosts
@@ -279,4 +281,200 @@ target02 | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
+```
+
+
+### Atelier 6 - Exercice
+
+```bash
+vagrant up
+
+vagrant ssh control
+```
+
+
+
+- Éditez /etc/hosts de manière à ce que les Target Hosts soient joignables par leur nom d’hôte simple.
+Ajoutez les lignes suivantes à /etc/hosts :
+
+```bash
+192.168.56.20 target01
+192.168.56.30 target02
+192.168.56.40 target03
+```
+
+- Configurez l’authentification par clé SSH avec les trois Target Hosts.
+```bash
+vagrant@control:~$ ssh-keygen
+vagrant@control:~$ ssh-copy-id vagrant@target01
+vagrant@control:~$ ssh-copy-id vagrant@target02
+vagrant@control:~$ ssh-copy-id vagrant@target03
+```
+
+- Installez Ansible.
+```bash
+vagrant@control:~$ sudo apt update
+vagrant@control:~$ sudo apt install ansible
+```
+
+- Envoyez un premier ping Ansible sans configuration.
+```bash
+vagrant@control:~$ ansible all -i target01,target02,target03 -m ping
+```
+
+- Créez un répertoire de projet ~/monprojet.
+```bash
+vagrant@control:~$ mkdir ~/monprojet
+```
+
+- Créez un fichier vide ansible.cfg dans ce répertoire.
+
+```bash
+vagrant@control:~$ touch ~/monprojet/ansible.cfg
+
+[defaults]
+inventory = ./hosts
+log_path = ~/journal/ansible.log
+```
+
+- Vérifiez si ce fichier est bien pris en compte par Ansible.
+
+Il faut bien être dans le répertoire de projet pour que le fichier ansible.cfg soit pris en compte.
+
+```bash
+vagrant@control:~$ ansible --version | head -n 2
+ansible 2.10.8
+  config file = None
+vagrant@control:~$ cd monprojet/
+vagrant@control:~/monprojet$ ansible --version | head -n 2
+ansible 2.10.8
+  config file = /home/vagrant/monprojet/ansible.cfg
+```
+
+- Spécifiez un inventaire nommé hosts.
+
+```bash
+vagrant@control:~/monprojet$ touch hosts
+
+monprojet/hosts
+[testlab]
+target01
+target02
+target03
+
+[testlab:vars]
+ansible_user=vagrant
+
+```
+
+
+- Activez la journalisation dans ~/journal/ansible.log.
+```bash
+[defaults]
+log_path = ~/journal/ansible.log
+```
+
+- Testez la journalisation.
+
+```bash
+vagrant@control:~/monprojet$ ansible all -m ping
+target02 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+target03 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+target01 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+```bash
+vagrant@control:~/monprojet$ cat ~/journal/ansible.log
+2025-02-12 09:32:45,050 p=3847 u=vagrant n=ansible | target02 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+2025-02-12 09:32:45,065 p=3847 u=vagrant n=ansible | target03 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+2025-02-12 09:32:45,086 p=3847 u=vagrant n=ansible | target01 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+- Créez un groupe [testlab] avec vos trois Target Hosts.
+- Définissez explicitement l’utilisateur vagrant pour la connexion à vos cibles.
+  
+```bash
+hosts
+
+[testlab]
+target01
+target02
+target03
+
+[testlab:vars]
+ansible_user=vagrant
+```
+
+- Envoyez un ping Ansible vers le groupe de machines [all].
+```bash
+ansible all -m ping
+```
+
+- Définissez l’élévation des droits pour l’utilisateur vagrant sur les Target Hosts.
+
+```bash
+hosts
+
+[testlab:vars]
+ansible_user=vagrant
+ansible_become=yes
+```
+
+- Affichez la première ligne du fichier /etc/shadow sur tous les Target Hosts.
+
+```bash
+vagrant@control:~$ ansible all -a "head -n 1 /etc/shadow"
+```
+
+```bash
+vagrant@control:~/monprojet$ ansible all -a "head -n 1 /etc/shadow"
+target02 | CHANGED | rc=0 >>
+root:*:19769:0:99999:7:::
+target03 | CHANGED | rc=0 >>
+root:*:19769:0:99999:7:::
+target01 | CHANGED | rc=0 >>
+root:*:19769:0:99999:7:::
+```
+
+- Quittez le Control Host et supprimez toutes les VM de l’atelier.
+
+```bash
+vagrant@control:~$ exit
+[ema@localhost:atelier-06] $ vagrant destroy -f
 ```
