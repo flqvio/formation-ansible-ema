@@ -726,12 +726,204 @@ drwxr-xr-x. 2 vagrant vagrant   6 Sep 19 14:26 playbooks
   </body>
 </html>
 ```
-Voici quelques pistes de réflexion :  
->    Pas la peine de rafraîchir le cache de paquets sous Rocky Linux et SUSE.  
-    Apache n’a pas forcément le même nom sur ces distributions.  
-    La même chose vaut pour le service correspondant.  
-    Rocky Linux utilise le gestionnaire de paquets dnf.  
-    SUSE Linux utilise le gestionnaire de paquets zypper.  
-    Les modules de gestion de paquets correspondants portent le même nom.  
-    L’emplacement de la page web par défaut (directive DocumentRoot) peut varier.  
-    J’ai supprimé le pare-feu FirewallD installé par défaut sous Rocky Linux pour ne pas trop vous embrouiller.  
+
+### Atelier 14 - Exercice
+
+
+- Placez-vous dans le répertoire du quatorzième atelier pratique et démarrez les VM :
+```bash
+$ cd ~/formation-ansible/atelier-14
+$ vagrant up
+$ vagrant ssh control
+```
+
+- Créer le playbook variable.yml
+
+```bash
+---
+- hosts: localhost
+  gather_facts: false
+
+  vars:
+    mycar: "Tesla"
+    mybike: "Ducati"
+
+  tasks:
+    - debug:
+        msg: "My car is {{ mycar }} and my bike is {{ mybike }}"
+```
+
+- Exécuter le playbook avec des extra vars
+
+```bash
+ansible-playbook myvars1.yml
+ansible-playbook myvars1.yml -e mycar=Audi
+ansible-playbook myvars1.yml -e mybike=Yamaha
+ansible-playbook myvars1.yml -e mycar=Audi -e mybike=Yamaha
+
+[vagrant@control playbooks]$ ansible-playbook myvars1.yml
+
+PLAY [localhost] ******************************************************************************************
+
+TASK [debug] **********************************************************************************************
+ok: [localhost] => {
+    "msg": "My car is Tesla and my bike is Ducati"
+}
+
+PLAY RECAP ************************************************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+[vagrant@control playbooks]$ ansible-playbook myvars1.yml -e mycar=Audi
+
+PLAY [localhost] ******************************************************************************************
+
+TASK [debug] **********************************************************************************************
+ok: [localhost] => {
+    "msg": "My car is Audi and my bike is Ducati"
+}
+
+PLAY RECAP ************************************************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+[vagrant@control playbooks]$ ansible-playbook myvars1.yml -e mybike=Yamaha
+
+PLAY [localhost] ******************************************************************************************
+
+TASK [debug] **********************************************************************************************
+ok: [localhost] => {
+    "msg": "My car is Tesla and my bike is Yamaha"
+}
+
+PLAY RECAP ************************************************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+[vagrant@control playbooks]$ ansible-playbook myvars1.yml -e mycar=Audi -e mybike=Yamaha
+
+PLAY [localhost] ******************************************************************************************
+
+TASK [debug] **********************************************************************************************
+ok: [localhost] => {
+    "msg": "My car is Audi and my bike is Yamaha"
+}
+
+PLAY RECAP ************************************************************************************************
+localhost                  : ok=1    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+```
+
+
+- Créer le playbook variable2.yml avec set_fact
+
+```bash
+---
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Define variables
+      set_fact:
+        mycar: "Ferrari"
+        mybike: "Harley-Davidson"
+
+    - debug:
+        msg: "My car is {{ mycar }} and my bike is {{ mybike }}"
+```
+
+- Exécuter le playbook
+
+```bash
+ansible-playbook myvars2.yml
+ansible-playbook myvars2.yml -e mycar=Porsche -e mybike=Kawasaki
+
+[vagrant@control playbooks]$ ansible-playbook myvars2.yml 
+
+PLAY [localhost] ******************************************************************************************
+
+TASK [Define variables] ***********************************************************************************
+ok: [localhost]
+
+TASK [debug] **********************************************************************************************
+ok: [localhost] => {
+    "msg": "My car is Ferrari and my bike is Harley-Davidson"
+}
+
+PLAY RECAP ************************************************************************************************
+localhost                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+[vagrant@control playbooks]$ ansible-playbook myvars2.yml -e mycar=Porsche -e mybike=Kawasaki
+
+PLAY [localhost] ******************************************************************************************
+
+TASK [Define variables] ***********************************************************************************
+ok: [localhost]
+
+TASK [debug] **********************************************************************************************
+ok: [localhost] => {
+    "msg": "My car is Porsche and my bike is Kawasaki"
+}
+
+PLAY RECAP ************************************************************************************************
+localhost                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+
+- Créer le playbook variable3.yml sans rien définir
+
+```bash
+---
+- hosts: all
+  gather_facts: false
+
+  tasks:
+    - debug:
+        msg: "My car is {{ mycar }} and my bike is {{ mybike }}"
+```
+
+- Définir les valeurs des variables dans group_vars/all.yml
+
+```bash
+mycar: "VW"
+mybike: "BMW"
+```
+
+- Remplacer les valeurs pour target02 dans host_vars/target02.yml
+
+```bash
+---
+mycar: "Mercedes"
+mybike: "Honda"
+```
+
+- Exécuter le playbook myvars3.yml
+
+```bash
+ansible-playbook myvars3.yml
+```
+
+- Créer le playbook display_user.yml
+
+```bash
+---
+- hosts: localhost
+  gather_facts: false
+
+  vars_prompt:
+    - name: user
+      prompt: "Enter your username"
+      default: "microlinux"
+      private: false
+
+    - name: password
+      prompt: "Enter your password"
+      default: "yatahongaga"
+      private: true
+
+  tasks:
+    - debug:
+        msg: "Username is {{ user }} and password is {{ password }}"
+```
+
+- Exécuter le playbook
+
+```bash
+ansible-playbook display_user.yml
+```
