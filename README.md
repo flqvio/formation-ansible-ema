@@ -680,7 +680,7 @@ drwxr-xr-x. 2 vagrant vagrant   6 Sep 19 14:26 playbooks
 </html>
 ```
     Un troisième playbook apache-suse.yml qui installe Apache sur l’hôte suse avec une page personnalisée Apache web server running on SUSE Linux.
-```yml
+```yaml
 [vagrant@ansible playbooks]$ cat apache-suse.yml 
 ---
 - hosts: suse
@@ -739,7 +739,7 @@ $ vagrant ssh control
 
 - Créer le playbook variable.yml
 
-```bash
+```yaml
 ---
 - hosts: localhost
   gather_facts: false
@@ -814,7 +814,7 @@ localhost                  : ok=1    changed=0    unreachable=0    failed=0    s
 
 - Créer le playbook variable2.yml avec set_fact
 
-```bash
+```yaml
 ---
 - hosts: localhost
   gather_facts: false
@@ -868,7 +868,7 @@ localhost                  : ok=2    changed=0    unreachable=0    failed=0    s
 
 - Créer le playbook variable3.yml sans rien définir
 
-```bash
+```yaml
 ---
 - hosts: all
   gather_facts: false
@@ -880,14 +880,14 @@ localhost                  : ok=2    changed=0    unreachable=0    failed=0    s
 
 - Définir les valeurs des variables dans group_vars/all.yml
 
-```bash
+```yaml
 mycar: "VW"
 mybike: "BMW"
 ```
 
 - Remplacer les valeurs pour target02 dans host_vars/target02.yml
 
-```bash
+```yaml
 ---
 mycar: "Mercedes"
 mybike: "Honda"
@@ -901,7 +901,7 @@ ansible-playbook myvars3.yml
 
 - Créer le playbook display_user.yml
 
-```bash
+```yaml
 ---
 - hosts: localhost
   gather_facts: false
@@ -926,4 +926,54 @@ ansible-playbook myvars3.yml
 
 ```bash
 ansible-playbook display_user.yml
+```
+
+### Atelier 15 - Exercice
+
+kernel.yml
+```yaml
+---
+- hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Get kernel info
+      command: uname -a
+      changed_when: false
+      register: kernel_info
+
+    - debug:
+        msg: "{{ kernel_info.stdout }}"
+```
+
+kernel_var.yml
+```yaml
+---
+- hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Get kernel info
+      command: uname -a
+      changed_when: false
+      register: kernel_info
+
+    - debug:
+        var: kernel_info.stdout
+```
+
+packages.yml
+```yaml
+---
+- hosts: rocky, suse
+  gather_facts: false
+
+  tasks:
+    - name: Get total number of installed RPM packages
+      command: rpm -qa | wc -l
+      changed_when: false
+      register: rpm_count
+
+    - debug:
+        msg: "Total number of RPM packages installed: {{ rpm_count.stdout }}"
 ```
