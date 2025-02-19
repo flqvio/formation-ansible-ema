@@ -977,3 +977,41 @@ packages.yml
     - debug:
         msg: "Total number of RPM packages installed: {{ rpm_count.stdout }}"
 ```
+
+### Atelier 16 - Exercice
+
+pkg-info.yml
+```yaml
+---
+- hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Display package manager
+      debug:
+        msg: "The package manager on {{ inventory_hostname }} is {{ ansible_pkg_mgr }}"
+```
+
+python-info.yml
+```yaml
+---
+- hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Display Python version
+      debug:
+        msg: "The Python version on {{ inventory_hostname }} is {{ ansible_python_version }}"
+```
+
+dns-info.yml
+```yaml
+---
+- hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Display DNS servers
+      debug:
+        msg: "The DNS servers on {{ inventory_hostname }} are {{ ansible_dns.nameservers }}"
+```
