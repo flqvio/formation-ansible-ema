@@ -1015,3 +1015,176 @@ dns-info.yml
       debug:
         msg: "The DNS servers on {{ inventory_hostname }} are {{ ansible_dns.nameservers }}"
 ```
+
+### Atelier 17 - Exercice
+
+chrony-01.yml
+```yaml
+
+---
+- hosts: all
+  become: yes  # Exécute les tâches en mode administrateur
+
+  tasks:
+
+    - name: Installer Chrony sur Debian/Ubuntu
+      apt:
+        name: chrony
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Installer Chrony sur Rocky Linux
+      dnf:
+        name: chrony
+        state: present
+      when: ansible_distribution == "Rocky"
+
+    - name: Installer Chrony sur SUSE Linux
+      zypper:
+        name: chrony
+        state: present
+      when: ansible_distribution == "openSUSE Leap"
+
+    - name: Copier la configuration Chrony
+      copy:
+        dest: "{{ '/etc/chrony/chrony.conf' if ansible_os_family == 'Debian' else '/etc/chrony.conf' }}"
+        content: |
+          server 0.fr.pool.ntp.org iburst
+          server 1.fr.pool.ntp.org iburst
+          server 2.fr.pool.ntp.org iburst
+          server 3.fr.pool.ntp.org iburst
+          driftfile /var/lib/chrony/drift
+          makestep 1.0 3
+          rtcsync
+          logdir /var/log/chrony
+      notify: Redémarrer Chrony
+
+  handlers:
+    - name: Redémarrer Chrony
+      service:
+        name: chronyd
+        state: restarted
+        enabled: true
+
+```
+
+chrony-02.yml
+```yaml
+---
+- hosts: all
+  become: yes
+
+  vars:
+    chrony:
+      Debian:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony/chrony.conf
+      Ubuntu:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony/chrony.conf
+      Rocky:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony.conf
+      openSUSE Leap:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony.conf
+
+  tasks:
+
+    - name: Installer Chrony
+      package:
+        name: "{{ chrony[ansible_distribution].package }}"
+        state: present
+
+    - name: Copier la configuration Chrony
+      copy:
+        dest: "{{ chrony[ansible_distribution].config_path }}"
+        content: |
+          server 0.fr.pool.ntp.org iburst
+          server 1.fr.pool.ntp.org iburst
+          server 2.fr.pool.ntp.org iburst
+          server 3.fr.pool.ntp.org iburst
+          driftfile /var/lib/chrony/drift
+          makestep 1.0 3
+          rtcsync
+          logdir /var/log/chrony
+      notify: Redémarrer Chrony
+
+  handlers:
+    - name: Redémarrer Chrony
+      service:
+        name: "{{ chrony[ansible_distribution].service }}"
+        state: restarted
+        enabled: true
+```
+
+
+### Atelier 18 - Exercice
+
+chrony.conf.j2
+```bash
+{# templates/chrony.conf.j2 #}
+# Configuration file path: {{ chrony_config_path }}
+
+server 0.fr.pool.ntp.org iburst
+server 1.fr.pool.ntp.org iburst
+server 2.fr.pool.ntp.org iburst
+server 3.fr.pool.ntp.org iburst
+
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+logdir /var/log/chrony
+```
+
+
+chrony.yml
+```yaml
+---
+- hosts: all
+  become: yes
+
+  vars:
+    chrony:
+      Debian:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony/chrony.conf
+      Ubuntu:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony/chrony.conf
+      Rocky:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony.conf
+      openSUSE Leap:
+        package: chrony
+        service: chronyd
+        config_path: /etc/chrony.conf
+
+  tasks:
+
+    - name: Installer Chrony
+      package:
+        name: "{{ chrony[ansible_distribution].package }}"
+        state: present
+
+    - name: Copier la configuration Chrony depuis un template
+      template:
+        src: chrony.conf.j2
+        dest: "{{ chrony[ansible_distribution].config_path }}"
+        mode: 0644
+      notify: Redémarrer Chrony
+
+  handlers:
+    - name: Redémarrer Chrony
+      service:
+        name: "{{ chrony[ansible_distribution].service }}"
+        state: restarted
+        enabled: true
+```
